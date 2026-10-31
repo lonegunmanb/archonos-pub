@@ -6937,7 +6937,6 @@ function savePersistedWorkspaceState(runtime, workspaceState) {
       chatHistory: (activeSession.messages || []).slice(-500),
     };
     writeFileSync(STATE_FILE, JSON.stringify(snapshot, null, 2), 'utf8');
-    runChatHistoryEdgeSync(snapshot).catch(() => {});
     runMeshEdgeSync(runtime).catch(() => {});
   } catch (err) {
     console.warn('Failed to save persisted state:', err.message);
@@ -11698,8 +11697,7 @@ export function startLocalEdgeServer({ host = '127.0.0.1', port = Number(process
     }
   };
 
-  const chatHistoryWatchTimer = setInterval(() => {
-    runChatHistoryEdgeSync(workspaceState).catch(() => {});
+  const meshWatchTimer = setInterval(() => {
     runMeshEdgeSync(runtime)
       .then(() => {
         savePersistedWorkspaceState(runtime, workspaceState);
@@ -11707,7 +11705,7 @@ export function startLocalEdgeServer({ host = '127.0.0.1', port = Number(process
       })
       .catch(() => {});
   }, 30000);
-  if (typeof chatHistoryWatchTimer.unref === 'function') chatHistoryWatchTimer.unref();
+  if (typeof meshWatchTimer.unref === 'function') meshWatchTimer.unref();
 
   server.listen(port, host, () => {
     const handReady = getLocalHandExecutionReadiness();
@@ -11715,8 +11713,7 @@ export function startLocalEdgeServer({ host = '127.0.0.1', port = Number(process
     console.log(`   • Sovereign Workbench (EN/中文) : http://${host}:${port}/`);
     console.log(`   • Persistent State File         : ${STATE_FILE}`);
     console.log(`   • Local-Hand Execution Readiness: ${handReady.ready ? 'READY' : 'DEGRADED'} (${handReady.message})`);
-    console.log(`   • Chat-History Sync Watcher     : ACTIVE (30s interval → ${CHAT_HISTORY_SYNC_STATE.remoteUrl}/api/chat/sync)`);
-    runChatHistoryEdgeSync(workspaceState).catch(() => {});
+    console.log('   • Chat-History Sync             : MANUAL ONLY');
     runMeshEdgeSync(runtime).catch(() => {});
   });
 
@@ -11726,4 +11723,3 @@ export function startLocalEdgeServer({ host = '127.0.0.1', port = Number(process
 if (import.meta.url === `file://${process.argv[1]}`) {
   startLocalEdgeServer();
 }
-
