@@ -46,7 +46,7 @@ ArchonOS 专注于作为一套自包含的个人智能操作系统独立运行�
 8. **双目标部署与远端-本地主权对话调度桥接 (Dual-Target & Remote Sovereign Chat Bridge)**:
    - **本地工作站或 Cloudflare 边缘部署**：支持选择 100% 本地隔离运行（`127.0.0.1:8790`）或部署至 Cloudflare Edge Worker + 远端 PWA 控制台。
    - **远端安全调度本地 CLI 执掌**：在手机或移动浏览器端访问 Cloudflare 远端控制台（`https://<worker>.workers.dev`）直接输入对话，任务经由 R2 安全入队并由 MacBook 本地守护进程（`archon-sync-edge.mjs`）独占认领执行。本机模型手（`agy`、`claude`、`codex`）在私有工作区和本地 MCP 环境执行后，秒级流式回传结果并呈现状态实时联动（`QUEUED FOR MACBOOK` → `RUNNING ON MACBOOK` → `DONE`）。
-   - **对话历史双向镜像同步与健康看板**：支持本地 `workspace-state.json` 与云端 R2 自动 30s 定时增量同步、一键手动刷新徽标，并独立呈现本地执行手就绪状态（Custodian Readiness）。
+   - **手动对话历史镜像同步与健康看板**：可通过同步控件主动将本地对话历史镜像到云端 R2，并独立呈现本地执行手就绪状态（Custodian Readiness）；自动上传对话历史已关闭。
 
 ---
 
@@ -105,6 +105,22 @@ flowchart TB
 ---
 
 ## 🚀 快速上手
+
+### Docker（Linux）
+
+```bash
+docker build -t archonos-web .
+docker run --rm --network host \
+  -v archonos-state:/app/.archon \
+  -v archonos-artifacts:/app/packages/archon-app/public/artifacts \
+  -v archonos-uploads:/app/packages/archon-app/public/uploads \
+  -v archonos-outputs:/app/outputs \
+  archonos-web
+```
+
+在 Docker 宿主机打开 `http://127.0.0.1:8790`。服务仅监听回环地址，不能使用 `-p` 映射；host 网络共享宿主机网络命名空间，不会使服务监听外部网卡。Docker Desktop 对 host 网络的支持取决于其版本和设置。以上卷可在容器删除后保留工作区状态及生成文件。发布的镜像为 `ghcr.io/lonegunmanb/archonos-pub:web-0.0.1`。
+
+即使配置了管理员令牌，本地服务也不会自动上传对话历史。手动同步或单独运行 `scripts/archon-sync-edge.mjs` 仍可将历史发送到配置的远端；Mesh 同步是独立功能，配置管理员令牌后可能发送频道和团队数据。
 
 ### 推荐流程：一键自主安装启动
 ```bash

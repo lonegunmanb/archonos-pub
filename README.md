@@ -46,7 +46,7 @@ ArchonOS is designed as an autonomous, self-contained personal intelligent opera
 8. **Dual-Target Deployment & Remote-to-Local Sovereign Chat Bridge**:
    - **Local Workstation OR Cloudflare Remote**: Choose between 100% offline local workstation deployment (`127.0.0.1:8790`) or Cloudflare Edge Worker + Remote PWA console.
    - **Remote Sovereign Chat Bridge**: Submit chat turns directly from your mobile/remote PWA (`https://<worker>.workers.dev`), queued securely into Cloudflare R2 and claimed exclusively by your local MacBook daemon (`archon-sync-edge.mjs`). Local CLI hands (`agy`, `claude`, `codex`) execute with private data/tools/MCPs on-device, and reply back to the remote UI with live status updates (`QUEUED FOR MACBOOK` → `RUNNING ON MACBOOK` → `DONE`).
-   - **Live Chat History Synchronization**: Two-way encrypted sync between local `workspace-state.json` and Cloudflare R2, with automatic 30s background sync watcher, manual 1-click sync badge, and separate local-hand execution readiness monitoring.
+   - **Manual Chat History Synchronization**: Explicitly mirror local chat history to Cloudflare R2 using the sync control, with separate local-hand execution readiness monitoring. Automatic chat-history uploads are disabled.
 
 ---
 
@@ -105,6 +105,22 @@ flowchart TB
 ---
 
 ## 🚀 Quickstart
+
+### Docker (Linux)
+
+```bash
+docker build -t archonos-web .
+docker run --rm --network host \
+  -v archonos-state:/app/.archon \
+  -v archonos-artifacts:/app/packages/archon-app/public/artifacts \
+  -v archonos-uploads:/app/packages/archon-app/public/uploads \
+  -v archonos-outputs:/app/outputs \
+  archonos-web
+```
+
+Open `http://127.0.0.1:8790` on the Docker host. The server binds to loopback only, so `-p` does not work; host networking shares the host's network namespace and does not expose the service on external interfaces. Host-network support on Docker Desktop depends on its settings and version. The volumes retain workspace state and generated files across container removal. The published image is `ghcr.io/lonegunmanb/archonos-pub:web-0.0.1`.
+
+Chat history is never uploaded automatically by the local server, even when an admin token is configured. Manual sync and the separately invoked `scripts/archon-sync-edge.mjs` can still send history to the configured remote. Mesh synchronization is separate and can send channel and team data when an admin token is configured.
 
 ### Option A: One-Line Autonomous Setup
 ```bash
